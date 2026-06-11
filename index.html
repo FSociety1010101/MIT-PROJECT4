@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YouTube Pre-Rating</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #121212;
+      color: #fff;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      width: min(100%, 720px);
+      background: #1f1f1f;
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 12px 30px rgba(0,0,0,.35);
+    }
+    h1 {
+      margin-top: 0;
+      font-size: 1.9rem;
+      color: #ffcc00;
+    }
+    p {
+      margin: 8px 0 20px;
+      line-height: 1.6;
+      color: #d0d0d0;
+    }
+    label,
+    input,
+    button {
+      display: block;
+      width: 100%;
+    }
+    input {
+      font-size: 1rem;
+      padding: 12px 14px;
+      margin: 8px 0 16px;
+      border-radius: 10px;
+      border: 1px solid #333;
+      background: #171717;
+      color: #fff;
+    }
+    button {
+      padding: 14px 18px;
+      border: none;
+      border-radius: 10px;
+      background: #ff0000;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+      transition: filter .2s ease;
+    }
+    button:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+      filter: grayscale(.4);
+    }
+    .rating {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin: 12px 0 20px;
+    }
+    .rating button {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: #333;
+      color: #fff;
+      font-size: 1.2rem;
+    }
+    .rating button.active {
+      background: #ffcc00;
+      color: #000;
+    }
+    .player {
+      margin-top: 24px;
+      display: none;
+    }
+    .player iframe {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: 14px;
+      border: none;
+    }
+    .notice {
+      margin-top: 12px;
+      font-size: 0.95rem;
+      color: #b8b8b8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>YouTube Pre-Rating</h1>
+    <p>Enter a YouTube video URL or ID, choose a rating, then unlock the watch button.</p>
+
+    <label for="videoUrl">YouTube URL / Video ID</label>
+    <input id="videoUrl" type="text" placeholder="https://www.youtube.com/watch?v=..." />
+
+    <div class="rating" id="ratingButtons">
+      <button type="button" data-rating="1">1</button>
+      <button type="button" data-rating="2">2</button>
+      <button type="button" data-rating="3">3</button>
+      <button type="button" data-rating="4">4</button>
+      <button type="button" data-rating="5">5</button>
+    </div>
+
+    <button id="watchButton" type="button" disabled>Rate to Unlock Watch</button>
+    <p class="notice">The video embed will show once the video is rated.</p>
+
+    <div class="player" id="playerContainer">
+      <iframe id="videoFrame" src="" allowfullscreen></iframe>
+    </div>
+  </div>
+
+  <script>
+    const ratingButtons = document.querySelectorAll('#ratingButtons button');
+    const watchButton = document.getElementById('watchButton');
+    const videoUrlInput = document.getElementById('videoUrl');
+    const playerContainer = document.getElementById('playerContainer');
+    const videoFrame = document.getElementById('videoFrame');
+    let selectedRating = 0;
+
+    function getYouTubeId(value) {
+      const url = value.trim();
+      if (!url) return '';
+      const standardMatch = url.match(/[?&]v=([\w-]{11})/);
+      if (standardMatch) return standardMatch[1];
+      const shortMatch = url.match(/youtu\.be\/([\w-]{11})/);
+      if (shortMatch) return shortMatch[1];
+      const idMatch = url.match(/^([\w-]{11})$/);
+      return idMatch ? idMatch[1] : '';
+    }
+
+    function updateWatchButton() {
+      watchButton.disabled = selectedRating === 0 || !getYouTubeId(videoUrlInput.value);
+      watchButton.textContent = watchButton.disabled ? 'Rate to Unlock Watch' : `Watch Video (Rated ${selectedRating}/5)`;
+    }
+
+    ratingButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        selectedRating = Number(button.dataset.rating);
+        ratingButtons.forEach(btn => btn.classList.toggle('active', btn === button));
+        updateWatchButton();
+      });
+    });
+
+    videoUrlInput.addEventListener('input', updateWatchButton);
+
+    watchButton.addEventListener('click', () => {
+      const videoId = getYouTubeId(videoUrlInput.value);
+      if (!videoId) {
+        alert('Enter a valid YouTube URL or video ID.');
+        return;
+      }
+      videoFrame.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+      playerContainer.style.display = 'block';
+    });
+  </script>
+</body>
+</html>
